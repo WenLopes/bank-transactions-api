@@ -1,0 +1,9 @@
+version: '3.4'
+services:
+  bank-transactions-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bank-transactions-api
+    ports:
+      - 16091:8080
