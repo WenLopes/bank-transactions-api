@@ -12,8 +12,8 @@ import (
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", helloWorld).Methods("GET")
-	fmt.Printf("Escutando na porta 16090\n")
-	log.Fatal(http.ListenAndServe(":16090", router))
+	fmt.Printf("Escutando na porta LOCAL 16091 🏆 \n")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 func helloWorld(w http.ResponseWriter, r *http.Request) {
