@@ -9,6 +9,7 @@ import (
 	"github.com/WenLopes/bank-transactions-api/api/presenters"
 	"github.com/WenLopes/bank-transactions-api/api/requests"
 	"github.com/WenLopes/bank-transactions-api/api/responses"
+	"github.com/WenLopes/bank-transactions-api/api/validators"
 	"github.com/WenLopes/bank-transactions-api/app/account"
 	"github.com/gorilla/mux"
 )
@@ -41,12 +42,16 @@ func handleDeposit(
 	accountService account.UseCase,
 ) {
 
-	//Todo: Criar validação de request
+	_, err := validators.ValidateDeposit(event)
+	if err != nil {
+		responses.Error(writer, http.StatusUnprocessableEntity, err)
+		return
+	}
 
 	accountId, err := strconv.Atoi(event.Destination)
 
 	if err != nil {
-		fmt.Println(err) // Logar erro aqui
+		fmt.Println(err) // Logar erro
 		responses.Error(writer, http.StatusInternalServerError, errors.New("não foi possível concluir a operação"))
 		return
 	}
@@ -54,7 +59,7 @@ func handleDeposit(
 	account, err := accountService.ExecuteDeposit(accountId, event.Amount)
 
 	if err != nil {
-		fmt.Println(err) //logar erro aqui
+		fmt.Println(err) //logar erro
 		responses.Error(writer, http.StatusInternalServerError, errors.New("não foi possível concluir a operação"))
 		return
 	}
