@@ -18,6 +18,10 @@ func NewService(accountRepo domain.AccountRepository) service {
 	}
 }
 
+func (accountService service) FindByAccountId(accountId int) domain.Account {
+	return accountService.accountRepo.Find(accountId)
+}
+
 func (accountService service) ExecuteDeposit(accountId int, balance float32) (domain.Account, error) {
 	if balance < 0 {
 		return domain.Account{}, errors.New("valor para operação inválido")
