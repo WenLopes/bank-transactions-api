@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"github.com/WenLopes/bank-transactions-api/api/presenters"
 	"github.com/WenLopes/bank-transactions-api/api/requests"
 	"github.com/WenLopes/bank-transactions-api/api/responses"
 	"github.com/WenLopes/bank-transactions-api/app/account"
@@ -37,7 +40,27 @@ func handleDeposit(
 	event requests.EventRequest,
 	accountService account.UseCase,
 ) {
-	fmt.Println("handle deposit")
+
+	//Todo: Criar validação de request
+
+	accountId, err := strconv.Atoi(event.Destination)
+
+	if err != nil {
+		fmt.Println(err) // Logar erro aqui
+		responses.Error(writer, http.StatusInternalServerError, errors.New("não foi possível concluir a operação"))
+		return
+	}
+
+	account, err := accountService.ExecuteDeposit(accountId, event.Amount)
+
+	if err != nil {
+		fmt.Println(err) //logar erro aqui
+		responses.Error(writer, http.StatusInternalServerError, errors.New("não foi possível concluir a operação"))
+		return
+	}
+
+	presenter := presenters.NewDepositPresenter(account.Id, account.Balance)
+	responses.JSON(writer, http.StatusOK, presenter)
 }
 
 func handleWithDraw(

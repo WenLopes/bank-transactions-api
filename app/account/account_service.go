@@ -1,6 +1,10 @@
 package account
 
 import (
+	"errors"
+	"fmt"
+	"time"
+
 	"github.com/WenLopes/bank-transactions-api/domain"
 )
 
@@ -15,7 +19,31 @@ func NewService(accountRepo domain.AccountRepository) service {
 }
 
 func (accountService service) ExecuteDeposit(accountId int, balance float32) (domain.Account, error) {
-	return domain.Account{}, nil
+	if balance < 0 {
+		return domain.Account{}, errors.New("valor para operação inválido")
+	}
+
+	existingAccount := accountService.accountRepo.Find(accountId)
+
+	if (existingAccount == domain.Account{}) {
+		fmt.Println("conta não existe, vai ser criada")
+		account := domain.Account{
+			Id:        accountId,
+			Balance:   balance,
+			CreatedAt: time.Now(),
+		}
+		accountService.accountRepo.Add(account)
+		return account, nil
+	}
+
+	newBalance := (existingAccount.Balance + balance)
+	success, err := accountService.accountRepo.UpdateBalance(accountId, newBalance)
+
+	if !success {
+		return domain.Account{}, err
+	}
+
+	return accountService.accountRepo.Find(accountId), nil
 }
 
 func (accountService service) ExecuteWithDraw(account domain.Account, amount float32) (bool, error) {
