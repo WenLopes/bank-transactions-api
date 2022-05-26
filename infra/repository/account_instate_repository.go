@@ -72,3 +72,7 @@ func (repo *accountInStateRepository) getAccountIndex(accountId int) (int, bool)
 
 	return idx, exist
 }
+
+func (repo *accountInStateRepository) GetAll() []domain.Account {
+	return repo.accounts
+}

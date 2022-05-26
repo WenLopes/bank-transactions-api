@@ -16,4 +16,5 @@ type AccountRepository interface {
 	UpdateBalance(accountId int, balance float32) (bool, error)
 	Lock(accountId int)
 	Unlock(accountId int)
+	GetAll() []Account
 }
