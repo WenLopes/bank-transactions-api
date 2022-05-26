@@ -19,6 +19,7 @@ func main() {
 	router := mux.NewRouter()
 	handlers.NewEventHandler(router, accountService)
 	handlers.NewBalanceHandler(router, accountService)
+	handlers.NewResetHandler(router, accountService)
 
 	fmt.Printf("Escutando na porta LOCAL 16091 🏆 \n")
 	log.Fatal(http.ListenAndServe(":8080", router))
