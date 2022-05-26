@@ -112,5 +112,51 @@ func handleTransfer(
 	event requests.EventRequest,
 	accountService account.UseCase,
 ) {
-	fmt.Println("handle transfer")
+	_, err := validators.ValidateTransfer(event)
+	if err != nil {
+		responses.Error(writer, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	originId, err := strconv.Atoi(event.Origin)
+	if err != nil {
+		fmt.Println(err) // Logar erro aqui
+		responses.Error(writer, http.StatusInternalServerError, errors.New(messages.GENERIC_ERROR))
+		return
+	}
+
+	destinationId, err := strconv.Atoi(event.Destination)
+	if err != nil {
+		fmt.Println(err) // Logar erro aqui
+		responses.Error(writer, http.StatusInternalServerError, errors.New(messages.GENERIC_ERROR))
+		return
+	}
+
+	accountOrigin := accountService.FindByAccountId(originId)
+	if (accountOrigin == domain.Account{}) {
+		fmt.Println("conta de origem não existe") // logar que conta de origem não existe
+		responses.JSON(writer, http.StatusNotFound, 0)
+		return
+	}
+
+	accountDestination := accountService.FindByAccountId(destinationId)
+	if (accountDestination == domain.Account{}) {
+		fmt.Println("conta de destino não existe") // logar que conta de destino não existe
+		responses.JSON(writer, http.StatusNotFound, 0)
+		return
+	}
+
+	success, err := accountService.ExecuteTransfer(accountOrigin, accountDestination, event.Amount)
+
+	if !success {
+		fmt.Println(err) // Logar erro aqui
+		responses.Error(writer, http.StatusInternalServerError, err)
+		return
+	}
+
+	accountOrigin = accountService.FindByAccountId(originId)
+	accountDestination = accountService.FindByAccountId(destinationId)
+
+	presenter := presenters.NewTransferPresenter(accountOrigin, accountDestination)
+	responses.JSON(writer, http.StatusOK, presenter)
 }
