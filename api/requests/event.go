@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/WenLopes/bank-transactions-api/api/messages"
 )
 
 type EventRequest struct {
@@ -19,13 +21,13 @@ func MapRequestToEvent(request *http.Request) (EventRequest, error) {
 	bodyRequest, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		fmt.Println(err) // Logar erro aqui
-		return EventRequest{}, errors.New("erro ao processar requisição")
+		return EventRequest{}, errors.New(messages.GENERIC_ERROR)
 	}
 
 	var event EventRequest
 	if err = json.Unmarshal(bodyRequest, &event); err != nil {
 		fmt.Println(err) // Logar erro aqui
-		return EventRequest{}, errors.New("desculpe, não foi possível processar sua requisição")
+		return EventRequest{}, errors.New(messages.GENERIC_ERROR)
 	}
 
 	return event, nil
