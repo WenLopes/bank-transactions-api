@@ -28,7 +28,7 @@ func (accountService service) DeleteAll() {
 
 func (accountService service) ExecuteDeposit(accountId int, balance float32) (domain.Account, error) {
 	if balance < 0 {
-		return domain.Account{}, errors.New("valor para operação inválido")
+		return domain.Account{}, errors.New(domain.ErrInvalidAmount)
 	}
 
 	existingAccount := accountService.accountRepo.Find(accountId)
@@ -55,7 +55,20 @@ func (accountService service) ExecuteDeposit(accountId int, balance float32) (do
 }
 
 func (accountService service) ExecuteWithDraw(account domain.Account, amount float32) (bool, error) {
-	return true, nil
+
+	if account.Locked {
+		return false, errors.New(domain.BlockedAccount)
+	}
+
+	accountService.accountRepo.Lock(account.Id)
+	defer accountService.accountRepo.Unlock(account.Id)
+
+	if account.Balance < amount {
+		return false, errors.New(domain.InsuficientAccountBalance)
+	}
+
+	newBalance := (account.Balance - amount)
+	return accountService.accountRepo.UpdateBalance(account.Id, newBalance)
 }
 
 func (accountService service) ExecuteTransfer(accountOrigin domain.Account, accountDestination domain.Account, amount float32) (bool, error) {
