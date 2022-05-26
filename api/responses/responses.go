@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/WenLopes/bank-transactions-api/api/messages"
 )
 
 func JSON(w http.ResponseWriter, statusCode int, data interface{}) {
@@ -19,9 +21,18 @@ func JSON(w http.ResponseWriter, statusCode int, data interface{}) {
 }
 
 func Error(w http.ResponseWriter, statusCode int, err error) {
+
+	message := messages.Get(err.Error())
+
+	if message.ToString == "" {
+		message = messages.Get(messages.GENERIC_ERROR)
+	}
+
 	JSON(w, statusCode, struct {
-		Erro string `json:"erro"`
+		Code    int    `json:"code"`
+		Message string `json:"message"`
 	}{
-		Erro: err.Error(),
+		Code:    message.Code,
+		Message: message.ToString,
 	})
 }
