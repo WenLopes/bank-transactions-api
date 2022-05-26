@@ -45,6 +45,16 @@ func (repo *accountInStateRepository) UpdateBalance(accountId int, balance float
 	return true, nil
 }
 
+func (repo *accountInStateRepository) Lock(accountId int) {
+	accountIndex, _ := repo.getAccountIndex(accountId)
+	repo.accounts[accountIndex].Locked = true
+}
+
+func (repo *accountInStateRepository) Unlock(accountId int) {
+	accountIndex, _ := repo.getAccountIndex(accountId)
+	repo.accounts[accountIndex].Locked = false
+}
+
 func (repo *accountInStateRepository) getAccountIndex(accountId int) (int, bool) {
 	idx := 0
 	exist := false
