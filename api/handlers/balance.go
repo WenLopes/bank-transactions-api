@@ -1,10 +1,9 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
-	"strconv"
 
+	"github.com/WenLopes/bank-transactions-api/api/requests"
 	"github.com/WenLopes/bank-transactions-api/api/responses"
 	"github.com/WenLopes/bank-transactions-api/app/account"
 	"github.com/WenLopes/bank-transactions-api/domain"
@@ -16,28 +15,20 @@ func NewBalanceHandler(router *mux.Router, accountService account.UseCase) {
 }
 
 func getBalance(accountService account.UseCase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		accountIdParamExists := r.URL.Query().Has("account_id")
-
-		if !accountIdParamExists {
-			notExistsAccountIdParamError := errors.New("erro na formatação do request")
-			responses.Error(w, http.StatusNotFound, notExistsAccountIdParamError)
-			return
-		}
-
-		accountId, err := strconv.Atoi(r.URL.Query().Get("account_id"))
+	return func(writer http.ResponseWriter, request *http.Request) {
+		balanceRequest, err := requests.MapRequestToBalance(request)
 
 		if err != nil {
-			responses.Error(w, http.StatusInternalServerError, err)
+			responses.Error(writer, http.StatusUnprocessableEntity, err)
 			return
 		}
 
-		account := accountService.FindByAccountId(accountId)
+		account := accountService.FindByAccountId(balanceRequest.AccountId)
 		if (account == domain.Account{}) {
-			responses.JSON(w, http.StatusNotFound, 0)
+			responses.JSON(writer, http.StatusNotFound, 0)
 			return
 		}
 
-		responses.JSON(w, http.StatusOK, account.Balance)
+		responses.JSON(writer, http.StatusOK, account.Balance)
 	}
 }
