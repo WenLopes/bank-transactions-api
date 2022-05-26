@@ -27,6 +27,7 @@ func (accountService service) DeleteAll() {
 }
 
 func (accountService service) ExecuteDeposit(accountId int, balance float32) (domain.Account, error) {
+
 	if balance < 0 {
 		return domain.Account{}, errors.New(domain.ErrInvalidAmount)
 	}
@@ -72,5 +73,55 @@ func (accountService service) ExecuteWithDraw(account domain.Account, amount flo
 }
 
 func (accountService service) ExecuteTransfer(accountOrigin domain.Account, accountDestination domain.Account, amount float32) (bool, error) {
+
+	if accountOrigin.Locked {
+		return false, errors.New(domain.BlockedAccount)
+	}
+
+	accountService.accountRepo.Lock(accountOrigin.Id)
+	defer accountService.accountRepo.Unlock(accountOrigin.Id)
+
+	if accountOrigin.Balance < amount {
+		return false, errors.New(domain.InsuficientAccountBalance)
+	}
+
+	originNewBalance := (accountOrigin.Balance - amount)
+	destinationNewBalance := (accountDestination.Balance + amount)
+
+	success, err := accountService.accountRepo.UpdateBalance(accountOrigin.Id, originNewBalance)
+
+	if !success {
+		return false, err
+	}
+
+	success, err = accountService.accountRepo.UpdateBalance(accountDestination.Id, destinationNewBalance)
+
+	if !success {
+		fmt.Println(err)
+
+		rollback, err := accountService.rollbackTransfer(accountOrigin, accountDestination)
+		if !rollback {
+			fmt.Println(err)
+			// Cron de conciliação
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (accountService service) rollbackTransfer(accountOrigin, accountDestination domain.Account) (bool, error) {
+	originSuccess, originErr := accountService.accountRepo.UpdateBalance(accountOrigin.Id, accountOrigin.Balance)
+
+	if !originSuccess {
+		return false, originErr
+	}
+
+	destinationSuccess, destinationErr := accountService.accountRepo.UpdateBalance(accountDestination.Id, accountDestination.Balance)
+
+	if !destinationSuccess {
+		return false, destinationErr
+	}
+
 	return true, nil
 }
