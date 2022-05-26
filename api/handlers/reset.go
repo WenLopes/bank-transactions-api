@@ -1,19 +1,20 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/WenLopes/bank-transactions-api/domain"
+	"github.com/WenLopes/bank-transactions-api/api/responses"
+	"github.com/WenLopes/bank-transactions-api/app/account"
 	"github.com/gorilla/mux"
 )
 
-func NewResetHandler(router *mux.Router, accountRepo domain.AccountRepository) {
-	router.HandleFunc("/reset", reset(accountRepo)).Methods("GET").Name("reset")
+func NewResetHandler(router *mux.Router, accountService account.UseCase) {
+	router.HandleFunc("/reset", reset(accountService)).Methods("GET").Name("reset")
 }
 
-func reset(accountRepo domain.AccountRepository) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("todo: resetar estado")
+func reset(accountService account.UseCase) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		accountService.DeleteAll()
+		responses.JSON(writer, http.StatusOK, "OK")
 	}
 }
