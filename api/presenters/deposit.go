@@ -14,8 +14,3 @@ func NewDepositPresenter(id int, balance float32) depositPresenter {
 		},
 	}
 }
-
-type idWithBalance struct {
-	Id      string  `json:"id"`
-	Balance float32 `json:"balance"`
-}
