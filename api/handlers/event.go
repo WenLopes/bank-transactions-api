@@ -30,7 +30,8 @@ func newEvent(accountService account.UseCase) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		event, err := requests.MapRequestToEvent(request)
 		if err != nil {
-			responses.Error(writer, http.StatusUnprocessableEntity, err) // NÃO DEVOLVER MENSAGEM DE ERRO PARA O USUÁRIO
+			fmt.Println(err)
+			responses.Error(writer, http.StatusUnprocessableEntity, err)
 			return
 		}
 
@@ -53,16 +54,16 @@ func handleDeposit(
 	accountId, err := strconv.Atoi(event.Destination)
 
 	if err != nil {
-		fmt.Println(err) // Logar erro
-		responses.Error(writer, http.StatusInternalServerError, errors.New("não foi possível concluir a operação"))
+		// Logar erro aqui
+		responses.Error(writer, http.StatusInternalServerError, errors.New(messages.GENERIC_ERROR))
 		return
 	}
 
 	account, err := accountService.ExecuteDeposit(accountId, event.Amount)
 
 	if err != nil {
-		fmt.Println(err) //logar erro
-		responses.Error(writer, http.StatusInternalServerError, errors.New("não foi possível concluir a operação"))
+		// Logar erro aqui, segundo parametro retornado pelo UpdateBalance
+		responses.Error(writer, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -75,6 +76,7 @@ func handleWithDraw(
 	event requests.EventRequest,
 	accountService account.UseCase,
 ) {
+
 	_, err := validators.ValidateWithDraw(event)
 	if err != nil {
 		responses.Error(writer, http.StatusUnprocessableEntity, err)
@@ -112,6 +114,7 @@ func handleTransfer(
 	event requests.EventRequest,
 	accountService account.UseCase,
 ) {
+
 	_, err := validators.ValidateTransfer(event)
 	if err != nil {
 		responses.Error(writer, http.StatusUnprocessableEntity, err)
