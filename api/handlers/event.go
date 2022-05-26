@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/WenLopes/bank-transactions-api/api/messages"
 	"github.com/WenLopes/bank-transactions-api/api/presenters"
 	"github.com/WenLopes/bank-transactions-api/api/requests"
 	"github.com/WenLopes/bank-transactions-api/api/responses"
 	"github.com/WenLopes/bank-transactions-api/api/validators"
 	"github.com/WenLopes/bank-transactions-api/app/account"
+	"github.com/WenLopes/bank-transactions-api/domain"
 	"github.com/gorilla/mux"
 )
 
@@ -73,7 +75,36 @@ func handleWithDraw(
 	event requests.EventRequest,
 	accountService account.UseCase,
 ) {
-	fmt.Println("handle withdraw")
+	_, err := validators.ValidateWithDraw(event)
+	if err != nil {
+		responses.Error(writer, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	accountId, err := strconv.Atoi(event.Origin)
+	if err != nil {
+		fmt.Println(err) // Logar erro aqui
+		responses.Error(writer, http.StatusInternalServerError, errors.New(messages.GENERIC_ERROR))
+		return
+	}
+
+	account := accountService.FindByAccountId(accountId)
+	if (account == domain.Account{}) {
+		responses.JSON(writer, http.StatusNotFound, 0)
+		return
+	}
+
+	success, err := accountService.ExecuteWithDraw(account, event.Amount)
+
+	if !success {
+		fmt.Println(err) // Logar erro aqui
+		responses.Error(writer, http.StatusInternalServerError, err)
+		return
+	}
+
+	account = accountService.FindByAccountId(accountId)
+	presenter := presenters.NewWithDrawPresenter(account.Id, account.Balance)
+	responses.JSON(writer, http.StatusOK, presenter)
 }
 
 func handleTransfer(
