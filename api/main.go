@@ -21,6 +21,6 @@ func main() {
 	handlers.NewBalanceHandler(router, accountService)
 	handlers.NewResetHandler(router, accountService)
 
-	fmt.Printf("Escutando na porta LOCAL 16091 🏆 \n")
+	fmt.Printf("Api pronta para receber requisições 🏆\n")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
