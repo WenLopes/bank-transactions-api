@@ -6,4 +6,4 @@ services:
       dockerfile: Dockerfile
     container_name: bank-transactions-api
     ports:
-      - 16091:8080
+      - ${API_PORT}:8080
