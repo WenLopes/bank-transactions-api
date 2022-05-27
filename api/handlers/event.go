@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var eventHandleable = map[string]func(w http.ResponseWriter, event requests.EventRequest, accountService account.UseCase){
+var eventExecutable = map[string]func(w http.ResponseWriter, event requests.EventRequest, accountService account.UseCase){
 	"deposit":  handleDeposit,
 	"transfer": handleTransfer,
 	"withdraw": handleWithDraw,
@@ -35,7 +35,7 @@ func newEvent(accountService account.UseCase) http.HandlerFunc {
 			return
 		}
 
-		eventHandleable[event.EventType](writer, event, accountService)
+		eventExecutable[event.EventType](writer, event, accountService)
 	}
 }
 
@@ -68,7 +68,7 @@ func handleDeposit(
 	}
 
 	presenter := presenters.NewDepositPresenter(account.Id, account.Balance)
-	responses.JSON(writer, http.StatusOK, presenter)
+	responses.JSON(writer, http.StatusCreated, presenter)
 }
 
 func handleWithDraw(
@@ -106,7 +106,7 @@ func handleWithDraw(
 
 	account = accountService.FindByAccountId(accountId)
 	presenter := presenters.NewWithDrawPresenter(account.Id, account.Balance)
-	responses.JSON(writer, http.StatusOK, presenter)
+	responses.JSON(writer, http.StatusCreated, presenter)
 }
 
 func handleTransfer(
@@ -142,14 +142,7 @@ func handleTransfer(
 		return
 	}
 
-	accountDestination := accountService.FindByAccountId(destinationId)
-	if (accountDestination == domain.Account{}) {
-		fmt.Println("conta de destino não existe") // logar que conta de destino não existe
-		responses.JSON(writer, http.StatusNotFound, 0)
-		return
-	}
-
-	success, err := accountService.ExecuteTransfer(accountOrigin, accountDestination, event.Amount)
+	success, err := accountService.ExecuteTransfer(accountOrigin, destinationId, event.Amount)
 
 	if !success {
 		fmt.Println(err) // Logar erro aqui
@@ -158,8 +151,8 @@ func handleTransfer(
 	}
 
 	accountOrigin = accountService.FindByAccountId(originId)
-	accountDestination = accountService.FindByAccountId(destinationId)
+	accountDestination := accountService.FindByAccountId(destinationId)
 
 	presenter := presenters.NewTransferPresenter(accountOrigin, accountDestination)
-	responses.JSON(writer, http.StatusOK, presenter)
+	responses.JSON(writer, http.StatusCreated, presenter)
 }

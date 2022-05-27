@@ -17,7 +17,12 @@ func JSON(w http.ResponseWriter, statusCode int, data interface{}) {
 			log.Fatal(err)
 		}
 	}
+}
 
+func Text(w http.ResponseWriter, statusCode int, data string) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(statusCode)
+	w.Write([]byte(data))
 }
 
 func Error(w http.ResponseWriter, statusCode int, err error) {

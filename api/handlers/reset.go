@@ -9,12 +9,12 @@ import (
 )
 
 func NewResetHandler(router *mux.Router, accountService account.UseCase) {
-	router.HandleFunc("/reset", reset(accountService)).Methods("GET").Name("reset")
+	router.HandleFunc("/reset", reset(accountService)).Methods("POST").Name("reset")
 }
 
 func reset(accountService account.UseCase) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		accountService.DeleteAll()
-		responses.JSON(writer, http.StatusOK, "OK")
+		responses.Text(writer, http.StatusOK, "OK")
 	}
 }

@@ -36,11 +36,7 @@ func (accountService service) ExecuteDeposit(accountId int, balance float32) (do
 
 	if (existingAccount == domain.Account{}) {
 		fmt.Println("conta não existe, vai ser criada")
-		account := domain.Account{
-			Id:        accountId,
-			Balance:   balance,
-			CreatedAt: time.Now(),
-		}
+		account := accountService.createAccount(accountId, balance)
 		accountService.accountRepo.Add(account)
 		return account, nil
 	}
@@ -65,14 +61,14 @@ func (accountService service) ExecuteWithDraw(account domain.Account, amount flo
 	defer accountService.accountRepo.Unlock(account.Id)
 
 	if account.Balance < amount {
-		return false, errors.New(domain.InsuficientAccountBalance)
+		return false, errors.New(domain.InsufficientAccountBalance)
 	}
 
 	newBalance := (account.Balance - amount)
 	return accountService.accountRepo.UpdateBalance(account.Id, newBalance)
 }
 
-func (accountService service) ExecuteTransfer(accountOrigin domain.Account, accountDestination domain.Account, amount float32) (bool, error) {
+func (accountService service) ExecuteTransfer(accountOrigin domain.Account, accountDestinationId int, amount float32) (bool, error) {
 
 	if accountOrigin.Locked {
 		return false, errors.New(domain.BlockedAccount)
@@ -82,7 +78,12 @@ func (accountService service) ExecuteTransfer(accountOrigin domain.Account, acco
 	defer accountService.accountRepo.Unlock(accountOrigin.Id)
 
 	if accountOrigin.Balance < amount {
-		return false, errors.New(domain.InsuficientAccountBalance)
+		return false, errors.New(domain.InsufficientAccountBalance)
+	}
+
+	accountDestination := accountService.FindByAccountId(accountDestinationId)
+	if (accountDestination == domain.Account{}) {
+		accountDestination = accountService.createAccount(accountDestinationId, 0)
 	}
 
 	originNewBalance := (accountOrigin.Balance - amount)
@@ -108,6 +109,16 @@ func (accountService service) ExecuteTransfer(accountOrigin domain.Account, acco
 	}
 
 	return true, nil
+}
+
+func (accountService service) createAccount(accountId int, balance float32) domain.Account {
+	account := domain.Account{
+		Id:        accountId,
+		Balance:   balance,
+		CreatedAt: time.Now(),
+	}
+	accountService.accountRepo.Add(account)
+	return account
 }
 
 func (accountService service) rollbackTransfer(accountOrigin, accountDestination domain.Account) (bool, error) {
