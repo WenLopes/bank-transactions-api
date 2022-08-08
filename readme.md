@@ -84,13 +84,6 @@ curl --location --request POST 'localhost:{API_PORT}/event' \
 }'
 ```
 
-## Considerações
-### Escolha da linguagem
-Embora a linguagem de programação cujo a qual possuo mais familiaridade seja o PHP, cheguei na conclusão que o Go (que no momento estou estudando) seria a melhor opção para realização do teste. O motivo para tal, vem da necessidade de utilizar um estado global para gerenciar os dados de contas e de transações.
-O PHP utiliza a arquitetura [share-nothing](https://tideways.com/profiler/blog/php-shared-nothing-architecture-the-benefits-and-downsides), onde cada request é independente de outro. Apesar dessa abordagem trazer benefícios, para o teste em questão não se torna a melhor opção, tendo em vista que optei por não utilizar nenhum mecanismo para persistir os dados (banco de dados, cache, etc...). Por outro lado, o Go não se utiliza dessa arquitetura e no momento do desenvolvimento do teste, está alinhado com meus estudos atuais.
-
-Obs: Utilizando [Swoole](https://www.swoole.com/) ou [Roadrunner](https://roadrunner.dev/) (esse que por sua vez, foi escrito em Go), seria possível implementar o comportamento necessário para realizar o teste com PHP. Entretanto, optei por utilizar o Go pelo motivo de estar mais alinhado com meus estudos atuais e também por nativamente (sem necessidade de instalar nada a mais) oferecer o suporte necessário para realizar o teste.
-
 ### Próximos passos
 Considerando que o projeto evoluisse para notas etapas, observabilidade e documentação certamente seriam pontos primordiais para o bom funcionamento da aplicação. Sendo assim, seguem abaixo sugestões de ferramentas que em meu ponto de vista, atenderiam essa necessidade.
 
